@@ -7,7 +7,7 @@ const MP = MultivariatePolynomials
 import Random
 
 import ..Input
-import ..Input: AbstractInput, TotalDegree, StartTarget, ParameterSystem, MPPolys
+import ..Input: AbstractInput, TotalDegree, StartTarget, ParameterSystem, MPPolys, MPPolyInputs
 import ..Homotopies: AbstractHomotopy, StraightLineHomotopy, ParameterHomotopy
 import ..ProjectiveVectors
 import ..ProjectiveVectors: PVector

@@ -12,7 +12,9 @@ using ..Utilities
 export AbstractInput,
     StartTarget,
     TotalDegree,
-    ParameterSystem
+    ParameterSystem,
+    MPPolys,
+    MPPolyInputs
 
 abstract type AbstractInput end
 
@@ -99,13 +101,13 @@ const supported_keywords = [:parameters, :startparameters, :targetparameters,
 Construct an `AbstractInput`.
 """
 function input(F::MPPolyInputs)
-    F = filter(f -> !iszero(f), F)
+    remove_zeros!(F)
     check_zero_dimensional(F)
     # square system and each polynomial is non-zero
-    if length(F) == MP.nvariables(F) && ishomogenous(F)
+    if length(F) == nvariables(F) && ishomogenous(F)
         error("The input system is a square homogenous system. This will result in an at least 1 dimensional solution space.")
     end
-    TotalDegree(F, MP.maxdegree.(F))
+    TotalDegree(F, maxdegrees(F))
 end
 
 function input(F::Systems.AbstractSystem)
@@ -120,7 +122,7 @@ function input(F::Systems.AbstractSystem)
     TotalDegree(F, degrees)
 end
 
-function input(G::Vector{<:MP.AbstractPolynomial}, F::Vector{<:MP.AbstractPolynomial}, startsolutions)
+function input(G::MPPolyInputs, F::MPPolyInputs, startsolutions)
     if length(G) ≠ length(F)
         error("Start and target system don't have the same length")
     end
@@ -128,7 +130,7 @@ function input(G::Vector{<:MP.AbstractPolynomial}, F::Vector{<:MP.AbstractPolyno
     StartTarget(G, F, startsolutions)
 end
 
-function input(F::Vector{<:MP.AbstractPolynomial}, startsolutions;
+function input(F::MPPolyInputs, startsolutions;
     parameters::Vector{<:MP.AbstractVariable}=error("parameters not defined"),
     startparameters=nothing, p₁ = startparameters,
     targetparameters=nothing, p₀ = targetparameters,

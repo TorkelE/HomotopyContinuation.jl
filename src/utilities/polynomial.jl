@@ -1,6 +1,7 @@
 export Composition, ishomogenous,
     uniquevar,
-    homogenize, check_zero_dimensional
+    homogenize, check_zero_dimensional, remove_zeros!, ncompositions, expansion, nvariables,
+    maxdegrees, variables
 
 const MPPoly = MP.AbstractPolynomialLike
 const MPPolys = Vector{<:MP.AbstractPolynomialLike}
@@ -14,16 +15,38 @@ struct Composition{T<:Union{<:MPPolys, <:AbstractComposition}} <: AbstractCompos
     f::T
 end
 
+expansion(F::MPPolys) = F
+function expansion(C::Composition)
+    vars = MP.variables(C.g)
+    map(g -> MP.subs(g, vars => expansion(C.f)), C.g)
+end
+
+function Base.show(io::IO, C::Composition)
+    println(io, "Composition of $(ncompositions(C)) polynomial systems with expansion:")
+
+    show(io, expansion(C))
+end
 Base.length(C::Composition) = length(C.g)
+
+ncompositions(C::Composition{<:MPPolys}) = 2
+ncompositions(C::Composition{<:Composition}) = 1 + ncompositions(C.f)
 
 compose(g::MPPolys, f::Composition) = Composition(g, f)
 compose(g::MPPolys, fs::MPPolys...) = Composition(g, compose(fs...))
 compose(f::MPPolys) = f
 import Base: ∘
 ∘(g::MPPolys, f::Union{<:MPPolys, <:Composition}) = compose(g, f)
+function ∘(C::Composition, f::Union{<:MPPolys, <:Composition})
+    # ∘ is left associative and not right associative ....
+    Composition(C.g, C.f ∘ f)
+end
 
 nvariables(C::Composition) = nvariables(C.f)
 nvariables(F::MPPolys) = MP.nvariables(F)
+
+variables(C::Composition) = variables(C.f)
+variables(F::MPPolys) = MP.variables(F)
+
 
 """
     degree(term::MP.AbstractTermLike, vars)
@@ -58,6 +81,16 @@ end
 function minmaxdegree(F::MPPolys, variables)
     map(f -> minmaxdegree(f, variables), F)
 end
+
+
+maxdegrees(F::MPPolys) = map(f -> MP.maxdegree(f), F)
+maxdegrees(F::MPPolys, variables) = map(f -> minmaxdegree(f, variables)[2], F)
+
+function maxdegrees(C::Composition)
+    degrees = maxdegrees(C.f)
+    maxdegrees(C.g, zip(MP.variables(C.g), degrees))
+end
+
 
 
 ###############
@@ -215,7 +248,7 @@ function remove_zeros!(F::MPPolys)
     F
 end
 function remove_zeros!(C::Composition)
-    filter!(!iszero, c.g)
+    filter!(!iszero, C.g)
     C
 end
 
@@ -224,7 +257,7 @@ end
 
 Check that the given polynomial system can have zero dimensional components.
 """
-function check_zero_dimensional(F::Vector{<:MP.AbstractPolynomial})
+function check_zero_dimensional(F::Union{MPPolys, Composition})
     N = nvariables(F)
     n = length(F)
 
@@ -233,16 +266,6 @@ function check_zero_dimensional(F::Vector{<:MP.AbstractPolynomial})
     end
     error("The input system will not result in a finite number of solutions.")
 end
-
-
-
-
-
-
-
-
-
-
 
 
 function homogenous_weights(F::MPPolys, variables=MP.variables(F))
@@ -276,3 +299,4 @@ Creates a unique variable.
 """
 uniquevar(f::MP.AbstractPolynomialLike, tag=:x0) = MP.similarvariable(f, gensym(tag))
 uniquevar(F::Vector{<:MP.AbstractPolynomialLike}, tag=:x0) = uniquevar(F[1], tag)
+uniquevar(C::Composition, tag=:x0) = uniquevar(C.g, tag)
