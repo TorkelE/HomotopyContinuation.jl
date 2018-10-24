@@ -20,7 +20,7 @@ export ldiv_lu!, blas_ldiv_lu!,
     check_kwargs_empty,
     start_solution_sample
 
-include("utilities/homogenization.jl")
+include("utilities/polynomial.jl")
 
 """
     check_kwargs_empty(kwargs, [allowed_kwargs])

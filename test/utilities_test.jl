@@ -2,7 +2,6 @@
 
     @testset "Homogenization" begin
         @polyvar x y z
-        @test Utilities.ishomogenous(x^2+y^2+x*y)
         @test Utilities.ishomogenous([x^2+y^2+x*y, x^5])
         @test Utilities.ishomogenous([x^2+y^2+x*y, x^4+1]) == false
 
@@ -13,6 +12,16 @@
         @test Utilities.ishomogenous(Utilities.homogenize([x^2+y^2+x*y, x^4+1]))
         @test Utilities.ishomogenous([x^2+z^2 + y, x^4+z^4], [x,z]) == false
         @test Utilities.ishomogenous(Utilities.homogenize([x^2+z^2*y, x^4+z^4*y], [x,z]), [x,z]) == true
+
+
+        @polyvar x y a b
+
+        g = [x^2+y^2, x + y + 1, y]
+        f = [2*a, a^2-2*a*b]
+        @test Utilities.compose(g, f) isa Utilities.Composition
+        @test g ∘ f isa Utilities.Composition
+        @test Utilities.ishomogenous(g ∘ f) == false
+        @test Utilities.ishomogenous(Utilities.homogenize(g ∘ f))
     end
 
     @testset "Misc" begin
