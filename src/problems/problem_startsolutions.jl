@@ -162,6 +162,9 @@ end
 
 construct_system(constructor, F::MPPolys) = constructor(F)
 construct_system(constructor, F::MPPolys, vars) = constructor(F, vars)
+construct_system(constructor, F::Composition, vars) = Systems.CompositionSystem(F, vars, constructor)
+construct_system(constructor, F::Composition) = Systems.CompositionSystem(F, constructor)
+
 
 """
     homogenize_if_necessary(F::Vector{<:MP.AbstractPolynomialLike})

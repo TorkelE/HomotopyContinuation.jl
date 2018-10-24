@@ -2,7 +2,7 @@ module Systems
 
 import MultivariatePolynomials
 const MP = MultivariatePolynomials
-
+import LinearAlgebra
 import ..HomotopiesBase
 import ..SystemsBase: AbstractSystem,
     AbstractSystemCache,
@@ -15,12 +15,15 @@ import ..SystemsBase: AbstractSystem,
     evaluate_and_jacobian,
     evaluate_and_jacobian!
 
+using ..Utilities
+
 export NullCache
 
 include("systems/sp_system.jl")
 include("systems/fixed_homotopy.jl")
 include("systems/fp_system.jl")
 include("systems/totaldegree_system.jl")
+include("systems/composition_system.jl")
 
 # This has to be here otherwise the compiler crashes
 """

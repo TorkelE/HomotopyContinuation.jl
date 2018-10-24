@@ -200,4 +200,23 @@
 
         @test nfinite(S) == 1
     end
+
+    @testset "Compositions" begin
+        @polyvar x y a b
+        f = [a + 1, b - 3]
+        g = [x^2+y^2+1, x + y - 1]
+
+        S₁ = solve(g ∘ f, seed=437610) |> solutions
+        S₂ = solve(Utilities.expansion(g ∘ f), seed=437610) |> solutions
+
+        @test all(map(S₁, S₂) do s₁, s₂
+            norm(s₁ - s₂) < 1e-8
+        end)
+
+        S₁ = solve(g ∘ f, seed=437610, system=Systems.SPSystem) |> solutions
+
+        @test all(map(S₁, S₂) do s₁, s₂
+            norm(s₁ - s₂) < 1e-8
+        end)
+    end
 end
