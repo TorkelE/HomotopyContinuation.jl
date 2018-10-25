@@ -149,8 +149,7 @@ end
 
 function problem_startsolutions(prob::ParameterSystem, homvar, seed; system=FPSystem, kwargs...)
     F, vars, homogenization = homogenize_if_necessary(prob.system, homvar=homvar, parameters=prob.parameters)
-
-    H = ParameterHomotopy(F, prob.parameters, variables=vars,
+    H = ParameterHomotopy(construct_system(system, SPSystem, F, variables=vars, parameters=prob.parameters),
 						  p₁=prob.p₁, p₀=prob.p₀, γ₁=prob.γ₁, γ₀=prob.γ₀)
 
     Projective(H, homogenization, seed), prob.startsolutions
@@ -160,10 +159,13 @@ end
 # HELPERS
 ##########
 
-construct_system(constructor, F::MPPolys) = constructor(F)
+construct_system(constructor, F::MPPolys; kwargs...) = constructor(F; kwargs...)
 construct_system(constructor, F::MPPolys, vars) = constructor(F, vars)
 construct_system(constructor, F::Composition, vars) = Systems.CompositionSystem(F, vars, constructor)
-construct_system(constructor, F::Composition) = Systems.CompositionSystem(F, constructor)
+construct_system(constructor, F::Composition; kwargs...) = Systems.CompositionSystem(F, constructor; kwargs...)
+
+construct_system(constructor, final_constructor, F::MPPolys; kwargs...) = final_constructor(F; kwargs...)
+construct_system(constructor, final_constructor, F::Composition; kwargs...) = Systems.CompositionSystem(F, vars, constructor, final_constructor; kwargs...)
 
 
 """

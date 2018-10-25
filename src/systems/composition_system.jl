@@ -1,5 +1,9 @@
 export CompositionSystem
 
+
+const FinalComposition = Composition{<:Vector{<:MP.AbstractPolynomial}}
+const Variables = Vector{<:MP.AbstractVariable}
+
 """
     CompositionSystem(composition::Composition, systems_constructor) <: AbstractSystem
 
@@ -11,17 +15,43 @@ struct CompositionSystem{S1<:AbstractSystem, S2<:AbstractSystem} <: AbstractSyst
     g::S2 # Never a composition system
 end
 
-function CompositionSystem(C::Composition{<:Vector{<:MP.AbstractPolynomial}}, vars, system_constructor)
-    CompositionSystem(system_constructor(C.f, vars), system_constructor(C.g))
+# variables will be passed to 
+function CompositionSystem(C::FinalComposition, Constr_g, Constr_f; variables=nothing, parameters=nothing)
+    if variables === nothing
+        CompositionSystem(final_system_constructor(C.f, vars), system_constructor(C.g))
+
 end
-function CompositionSystem(C::Composition{<:Composition}, vars, system_constructor)
-    CompositionSystem(CompositionSystem(C.f, vars, system_constructor), system_constructor(C.g))
+
+
+
+
+
+function CompositionSystem(C::FinalComposition, vars::Variables, system_constructor, final_system_constructor=system_constructor)
+    CompositionSystem(final_system_constructor(C.f, vars), system_constructor(C.g))
 end
-function CompositionSystem(C::Composition{<:Vector{<:MP.AbstractPolynomial}}, system_constructor)
-    CompositionSystem(system_constructor(C.f), system_constructor(C.g))
+function CompositionSystem(C::Composition{<:Composition}, vars::Variables, system_constructor, final_system_constructor=system_constructor)
+    CompositionSystem(CompositionSystem(C.f, vars, system_constructor, final_system_constructor), system_constructor(C.g))
 end
-function CompositionSystem(C::Composition{<:Composition}, system_constructor)
-    CompositionSystem(CompositionSystem(C.f, system_constructor), system_constructor(C.g))
+
+
+function CompositionSystem(C::FinalComposition, system_constructor; kwargs...)
+    CompositionSystem(system_constructor(C.f), system_constructor(C.g; kwargs...))
+end
+function CompositionSystem(C::FinalComposition, parameter_system_constructor, system_constructor; kwargs...)
+    CompositionSystem(system_constructor(C.f, system_constructor), parameter_system_constructor(C.g; kwargs...))
+end
+function CompositionSystem(C::FinalComposition, system_constructor; kwargs...)
+    CompositionSystem(system_constructor(C.f), system_constructor(C.g; kwargs...))
+end
+function CompositionSystem(C::FinalComposition, parameter_system_constructor, system_constructor; kwargs...)
+    CompositionSystem(system_constructor(C.f, system_constructor), parameter_system_constructor(C.g; kwargs...))
+end
+
+function CompositionSystem(C::Composition{<:Composition}, system_constructor; kwargs...)
+    CompositionSystem(CompositionSystem(C.f, system_constructor), system_constructor(C.g; kwargs...))
+end
+function CompositionSystem(C::Composition{<:Composition}, parameter_system_constructor, system_constructor; kwargs...)
+    CompositionSystem(CompositionSystem(C.f, system_constructor), parameter_system_constructor(C.g; kwargs...))
 end
 
 struct CompositionSystemCache{C1<:AbstractSystemCache, C2<:AbstractSystemCache, T} <: AbstractSystemCache
