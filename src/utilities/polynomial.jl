@@ -5,12 +5,14 @@ export Composition, ishomogenous,
 
 const MPPoly = MP.AbstractPolynomialLike
 const MPPolys = Vector{<:MP.AbstractPolynomialLike}
-
 const WeightedVariable = Tuple{<:MP.AbstractVariable, Int}
 
 
+
+
+
 abstract type AbstractComposition end
-struct Composition{T<:Union{<:MPPolys, <:AbstractComposition}} <: AbstractComposition
+struct Composition{T<:Union{<:MPPolys, <:HomogenousSystem, <:AbstractComposition}} <: AbstractComposition
     g::MPPolys
     f::T
 end
@@ -85,13 +87,10 @@ end
 
 maxdegrees(F::MPPolys) = map(f -> MP.maxdegree(f), F)
 maxdegrees(F::MPPolys, variables) = map(f -> minmaxdegree(f, variables)[2], F)
-
 function maxdegrees(C::Composition)
     degrees = maxdegrees(C.f)
     maxdegrees(C.g, zip(MP.variables(C.g), degrees))
 end
-
-
 
 ###############
 # ishomogenous
@@ -110,7 +109,6 @@ function ishomogenous(f::MP.AbstractPolynomialLike, variables)
     d_min, d_max = minmaxdegree(f, variables)
     d_min == d_max
 end
-
 function ishomogenous(F::MPPolys, vars=MP.variables(F); parameters=nothing)
     if parameters === nothing
         all(f -> ishomogenous(f, vars), F)
@@ -119,7 +117,6 @@ function ishomogenous(F::MPPolys, vars=MP.variables(F); parameters=nothing)
         all(f -> ishomogenous(f, variables), F)
     end
 end
-
 function ishomogenous(C::Composition; kwargs...)
     homogenous_degrees(C; kwargs...) !== nothing
 end
@@ -134,13 +131,11 @@ function homogenous_degrees(C::Composition{<:MPPolys}; parameters=nothing)
 
     homogenous_degrees(C.g, zip(MP.variables(C.g), degrees))
 end
-
 function homogenous_degrees(C::Composition{<:Composition}; kwargs...)
     degrees = homogenous_degrees(C.f; kwargs...)
     degrees === nothing && return nothing
     homogenous_degrees(C.g, zip(MP.variables(C.g), degrees))
 end
-
 function homogenous_degrees(F::MPPolys, variables)
     weights = Int[]
     for f in F
@@ -159,6 +154,85 @@ end
 #############
 # homogenize
 #############
+
+
+struct HomogenousSystem{N, P<:MPPolys, V<:MP.AbstractVariable}
+    F::Vector{P}
+    variables::NTuple{N, Vector{V}}
+    homvar::NTuple{N, V}
+    parameters::Union{Nothing, Vector{V}}
+    variable_weights::Union{Nothing, Vector{Int}}
+    weighted_degrees::Vector{Int}
+end
+
+
+function homogenize(F::MPPolys, var::MP.AbstractVariable, weights::Union{Nothing, Vector{Int}}=nothing; parameters=nothing)
+    variables = MP.variables(F)
+    if parameters !== nothing
+        setdiff!(variables, parameters)
+    end
+    if weights !== nothing
+        weighted_vars = zip(variables, weights)
+        G, degrees = homogenize_degrees(F, weighted_vars, var)
+    else
+        G, degrees = homogenize_degrees(F, variables, var)
+    end
+
+    HomogenousSystem(G, (variables,) (var,), parameters, weights, degrees)
+end
+
+function homogenize(C::FinalComposition, var::MP.AbstractVariable; parameters=nothing)
+    F̄ = homogenize(C.f, var)
+    push!()
+    Ḡ = homogenize(C.g, var, F̄.weighted_degrees, parameters=parameters)
+
+
+
+    variables = MP.variables(F)
+    if parameters !== nothing
+        setdiff!(variables, parameters)
+    end
+    if weights !== nothing
+        weighted_vars = zip(variables, weights)
+        G, degrees = homogenize_degrees(F, weighted_vars, var)
+    else
+        G, degrees = homogenize_degrees(F, variables, var)
+    end
+
+    HomogenousSystem(G, (variables,) (var,), parameters, weights, degrees)
+end
+
+function homogenize_degrees(F::MPPolys, variables, var::MP.AbstractVariable)
+    F̄ = similar(F)
+    degrees = Int[]
+    for (i,f) in enumerate(F)
+        f̄, d = homogenize_degree(f, variables, var)
+        F̄[i] = f̄
+        push!(degrees, d)
+    end
+
+    F̄, degrees
+end
+
+function homogenize_degree(f::MPPoly, variables, var::MP.AbstractVariable)
+    _, d = minmaxdegree(f, variables)
+    MP.polynomial(map(t -> t * var^(d - degree(t, variables)), f)), d
+end
+
+#
+# function homogenize(f::MPPoly, variables, var::MP.AbstractVariable)
+#     _, d_max = minmaxdegree(f, variables)
+#     MP.polynomial(map(f) do t
+#         d = d_max - degree(t, variables)
+#         t * var^d
+#     end)
+# end
+#
+
+
+
+
+
 """
     homogenize(f::MP.AbstractPolynomial, v::Vector{<:MP.AbstractVariable}, variable=uniquevar(f))
 
