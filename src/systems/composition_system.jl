@@ -6,6 +6,7 @@ export CompositionSystem
 A system representing the composition of polynomial maps.
 """
 struct CompositionSystem{S1<:AbstractSystem, S2<:AbstractSystem} <: AbstractSystem
+    # Defines g ∘ f
     f::S1 # Can be a CompositionSystem again
     g::S2 # Never a composition system
 end
