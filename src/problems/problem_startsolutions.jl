@@ -43,6 +43,10 @@ function problem_startsolutions(input::Input.Homotopy, homvar, seed; kwargs...)
     Projective(input.H, homogenization(homvar), seed), input.startsolutions
 end
 
+function problem_startsolutions(P::AbstractProblem, starts::AbstractVector)
+	P, starts
+end
+
 
 const overdetermined_error_msg = """
 The input system is overdetermined. Therefore it is necessary to provide an explicit start system.

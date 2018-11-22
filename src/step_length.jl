@@ -149,7 +149,9 @@ function update!(state::HeuristicStepLengthState, step::HeuristicStepLength, suc
     # we decrease the steplength
     state.steplength = step.decrease_factor * curr_steplength
 
-    if state.steplength < step.minimal_steplength
+    # @show state.steplength
+    # @show relsteplength(state)
+    if relsteplength(state) < step.minimal_steplength
         return :steplength_too_small
     end
 

@@ -2,7 +2,7 @@ export Endgame, Result, allowed_keywords
 
 const allowed_keywords = [:sampling_factor, :egtol, :minradius, :maxnorm, :minimal_maxnorm,
     :maxwindingnumber, :max_extrapolation_samples, :cauchy_loop_closed_tolerance,
-    :cauchy_samples_per_loop]
+    :cauchy_samples_per_loop, PathTracking.allowed_keywords...]
 
 struct Options
     # See Endgame docstring for explanations
@@ -200,3 +200,6 @@ function Result(endgame::Endgame)
     Result(state.status, x, real(state.R), state.pbest_delta,
         state.windingnumber, state.npredictions, state.iters)
 end
+
+Base.show(io::IO, R::Result) = Utilities.print_fieldnames(io, R)
+Base.show(io::IO, ::MIME"application/prs.juno.inline", R::Result) = R

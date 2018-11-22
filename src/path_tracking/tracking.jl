@@ -32,7 +32,7 @@ function track!(x₀, tracker::PathTracker, x₁, t₁, t₀)
 end
 function track!(tracker::PathTracker, x₁, t₁, t₀; kwargs...)
     setup!(tracker, x₁, t₁, t₀; kwargs...)
-
+    # println("track!: ", tracker.state.iters)
     while currstatus(tracker) == :ok
         step!(tracker)
         check_terminated!(tracker)
@@ -117,7 +117,6 @@ function update_t_Δt!(state, steplength, step_successfull)
     if step_successfull
         state.t -= state.Δt
     end
-
     status = StepLength.update!(state.steplength, steplength, step_successfull)
     if status != :ok
         state.status = status

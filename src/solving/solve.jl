@@ -105,6 +105,7 @@ function runendgame(solver, tid, k, start_solutions, endgame_zone_results)
     if r.returncode == :success
         # Run endgame
         result = Endgaming.runendgame(solver.endgame, r.x, t_endgame)
+        # @show result
         # If the tracker failed we are probably to late with the endgame.
         if result.returncode == :tracker_failed
             # Rerun with something more away
