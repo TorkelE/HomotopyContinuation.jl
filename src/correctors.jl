@@ -46,7 +46,7 @@ struct Result{T}
     cond::Float64
 end
 
-Base.show(io::IO, ::MIME"application/juno+inline", r::Result) = r
+Base.show(io::IO, ::MIME"application/prs.juno.inline", r::Result) = r
 Base.show(io::IO, result::Result) = print_fieldnames(io, result)
 
 
